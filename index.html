@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>NightSky</title>
+    <link rel="icon" href="/assets/img/profile.jpg">
+
+    <meta name="description" content="">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="keywords" content="">
+
+    <meta name="robots" content="index, follow">
+
+    <meta property="og:title" content="NightSky">
+    <meta property="og:description" content="">
+    <meta property="og:image" content="">
+
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#000] h-screen overflow-hidden">
+    <div id="system-overlay" class="absolute inset-0 bg-black opacity-0 hidden flex items-center justify-center system-overlay">
+        <div class="loading-spinner text-white text-4xl hidden" id="loading-spinner">◌</div>
+    </div>
+
+    <!-- Desktop Background -->
+    <div class="absolute inset-0 bg-[url('https://i.pinimg.com/originals/e2/38/17/e23817f641839282ad7fefa60c0ea996.gif')] bg-cover bg-center opacity-80"></div>
+    
+    <!-- Taskbar -->
+    <div class="translucentTB absolute bottom-0 left-0 right-0 h-12 border-t border-gray-700/50 flex items-center px-4">
+        <div class="flex items-center space-x-2">
+            <button id="start-button" class="w-9 h-9 hover:bg-white/10 rounded-full flex items-center justify-center transition-colors">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Windows_logo_-_2021.svg" class="w-5 h-5" alt="Windows">
+            </button>
+            <div class="flex items-center bg-white/5 rounded-full px-4 h-8">
+                <i class="fas fa-search text-gray-300 text-sm"></i>
+                <form id="search-form" class="ml-2">
+                    <input type="text" 
+                           class="bg-transparent outline-none text-white text-sm w-48 placeholder-gray-300" 
+                           placeholder="Search"
+                           id="search-input">
+                </form>
+            </div>
+        </div>
+
+        <!-- Centered Apps -->
+        <div class="flex-1 flex items-center justify-center absolute left-1/2 transform -translate-x-1/2">
+            <div class="flex space-x-1">
+                <a href="https://github.com/NightSky13000" target="_blank" class="w-12 h-9 hover:bg-white/10 rounded flex items-center justify-center transition-colors">
+                    <i class="fab fa-github text-gray-300 text-lg"></i>
+                </a>
+                <a href="https://myanimelist.net/profile/NightSky13000" target="_blank" class="w-12 h-9 hover:bg-white/10 rounded flex items-center justify-center transition-colors">
+                    <i class="fas fa-dragon text-gray-300 text-lg"></i>
+                </a>
+                <a href="https://discord.com" target="_blank" class="w-12 h-9 hover:bg-white/10 rounded flex items-center justify-center transition-colors">
+                    <i class="fab fa-discord text-gray-300 text-lg"></i>
+                </a>
+            </div>
+        </div>
+
+        <!-- System Tray -->
+        <div class="flex items-center space-x-4 ml-auto">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-wifi text-gray-300 text-sm"></i>
+                <i class="fas fa-volume-up text-gray-300 text-sm"></i>
+                <i class="fas fa-battery-full text-gray-300 text-sm"></i>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-gray-300 text-sm" id="time"></span>
+                <span class="text-gray-300 text-sm" id="date"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Desktop Icons -->
+    <div class="absolute top-4 left-4 grid gap-6">
+        <div id="recycle-bin" class="flex flex-col items-center w-24 gap-2 hover:bg-white/10 p-2 rounded-lg cursor-pointer">
+            <img src="https://img.icons8.com/fluency/48/null/recycle-bin.png" class="w-12 h-12">
+            <span class="text-white text-sm">Recycle Bin</span>
+        </div>
+        <div id="file-manager" class="flex flex-col items-center w-24 gap-2 hover:bg-white/10 p-2 rounded-lg cursor-pointer">
+            <img src="https://img.icons8.com/fluency/48/null/folder-invoices.png" class="w-12 h-12">
+            <span class="text-white text-sm">File Manager</span>
+        </div>
+    </div>
+
+    <!-- Recycle Bin -->
+    <div id="recycle-window" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gray-900/80 backdrop-blur rounded-lg shadow-xl hidden flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-700 window-draggable">
+            <h2 class="text-white font-semibold">Recycle Bin</h2>
+            <button onclick="toggleRecycleBin()" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+        <div class="flex-1 flex items-center justify-center">
+            <p class="text-gray-400 text-lg">Nothing here</p>
+        </div>
+    </div>
+
+    <!-- File Explorer -->
+    <div id="explorer-window" class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gray-900/80 backdrop-blur rounded-lg shadow-xl hidden flex-col">
+        <div class="flex items-center justify-between p-4 border-b border-gray-700 window-draggable">
+            <h2 class="text-white font-semibold">File Manager</h2>
+            <button onclick="toggleFileExplorer()" class="text-gray-400 hover:text-white">✕</button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4">
+            <div class="flex items-center p-2 hover:bg-white/10 rounded cursor-pointer">
+                <i class="fas fa-folder-open text-yellow-400 w-6"></i>
+                <span class="text-white ml-2">html</span>
+            </div>
+            <div class="ml-6">
+                <div class="flex items-center p-2 hover:bg-white/10 rounded cursor-pointer">
+                    <i class="fab fa-html5 text-orange-400 w-6"></i>
+                    <span class="text-white ml-2">index.html</span>
+                </div>
+            </div>
+            <div class="flex items-center p-2 hover:bg-white/10 rounded cursor-pointer">
+                <i class="fas fa-folder-open text-yellow-400 w-6"></i>
+                <span class="text-white ml-2">assets</span>
+            </div>
+            <div class="ml-6">
+                <div class="flex items-center p-2 hover:bg-white/10 rounded cursor-pointer">
+                    <i class="fab fa-css3-alt text-blue-400 w-6"></i>
+                    <span class="text-white ml-2">styles.css</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Start Menu -->
+    <div id="start-menu" class="absolute bottom-16 left-4 w-64 bg-gray-900/80 backdrop-blur rounded-lg shadow-xl hidden">
+        <div class="p-4 border-b border-gray-700 flex items-center space-x-4">
+            <img src="/assets/img/profile.jpg" alt="Profile Picture" class="w-12 h-12 rounded-full border border-gray-700 object-cover">
+            <div>
+                <div class="text-white font-semibold">NightSky</div>
+                <span class="bg-indigo-100 text-indigo-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-sm dark:bg-indigo-900 dark:text-indigo-300">V - 1.0</span>
+            </div>
+        </div>
+        <div class="p-4">
+            <div class="space-y-2">
+                <button class="w-full flex items-center space-x-3 p-2 hover:bg-white/10 rounded-lg" onclick="systemCommand('shutdown')">
+                    <i class="fas fa-power-off text-red-400"></i>
+                    <span class="text-white">Shut Down</span>
+                </button>
+                <button class="w-full flex items-center space-x-3 p-2 hover:bg-white/10 rounded-lg" onclick="systemCommand('restart')">
+                    <i class="fas fa-redo-alt text-blue-400"></i>
+                    <span class="text-white">Restart</span>
+                </button>
+                <button class="w-full flex items-center space-x-3 p-2 hover:bg-white/10 rounded-lg" onclick="systemCommand('sleep')">
+                    <i class="fas fa-moon text-yellow-400"></i>
+                    <span class="text-white">Sleep</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Time and Date
+        function updateDateTime() {
+            const now = new Date();
+            document.getElementById('time').textContent = now.toLocaleTimeString();
+            document.getElementById('date').textContent = now.toLocaleDateString();
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Search Function
+        document.getElementById('search-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = document.getElementById('search-input').value;
+            window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+        });
+
+        // Window Management
+        let activeWindow = null;
+        let isDragging = true;
+        let initialX, initialY, currentX, currentY;
+
+        function makeDraggable(windowElement) {
+            const header = windowElement.querySelector('.window-draggable');
+            
+            header.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                activeWindow = windowElement;
+                initialX = e.clientX - windowElement.offsetLeft;
+                initialY = e.clientY - windowElement.offsetTop;
+                
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+
+            const onMouseMove = (e) => {
+                if (!isDragging) return;
+                
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                
+                currentX = Math.max(0, Math.min(currentX, window.innerWidth - activeWindow.offsetWidth));
+                currentY = Math.max(0, Math.min(currentY, window.innerHeight - activeWindow.offsetHeight));
+                
+                activeWindow.style.left = `${currentX}px`;
+                activeWindow.style.top = `${currentY}px`;
+                activeWindow.style.transform = 'none';
+            };
+
+            const onMouseUp = () => {
+                isDragging = false;
+                document.removeEventListener('mousemove', onMouseMove);
+                document.removeEventListener('mouseup', onMouseUp);
+            };
+        }
+
+        [document.getElementById('recycle-window'), document.getElementById('explorer-window')].forEach(makeDraggable);
+
+        // Window Toggles
+        function toggleFileExplorer() {
+            const window = document.getElementById('explorer-window');
+            window.classList.toggle('hidden');
+            if (!window.classList.contains('hidden')) {
+                window.style.left = '50%';
+                window.style.top = '50%';
+                window.style.transform = 'translate(-50%, -50%)';
+            }
+        }
+
+        function toggleRecycleBin() {
+            const window = document.getElementById('recycle-window');
+            window.classList.toggle('hidden');
+            if (!window.classList.contains('hidden')) {
+                window.style.left = '50%';
+                window.style.top = '50%';
+                window.style.transform = 'translate(-50%, -50%)';
+            }
+        }
+
+        // Start Menu Toggle
+        document.getElementById('start-button').addEventListener('click', (e) => {
+            e.stopPropagation();
+            document.getElementById('start-menu').classList.toggle('hidden');
+        });
+
+        // System Command
+        function systemCommand(cmd) {
+            const overlay = document.getElementById('system-overlay');
+            const spinner = document.getElementById('loading-spinner');
+            
+            overlay.classList.remove('hidden');
+            overlay.style.opacity = '0.8';
+            
+            switch(cmd) {
+                case 'shutdown':
+                    spinner.classList.remove('hidden');
+                    setTimeout(() => {
+                        document.body.innerHTML = '<div class="bg-black w-full h-full flex flex-col items-center justify-center text-white text-2xl"><img src="https://upload.wikimedia.org/wikipedia/commons/8/87/Windows_logo_-_2021.svg" alt="Windows Icon" class="w-12 h-12 mb-4"><p>Shutting down...</p></div>';
+                    }, 2000);
+                    break;
+                case 'restart':
+                    spinner.classList.remove('hidden');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                    break;
+                case 'sleep':
+                    overlay.style.opacity = '0.9';
+                    setTimeout(() => {
+                        overlay.classList.add('hidden');
+                    }, 1000);
+                    break;
+            }
+        }
+
+        // Event Listeners
+        document.getElementById('file-manager').addEventListener('click', toggleFileExplorer);
+        document.getElementById('recycle-bin').addEventListener('click', toggleRecycleBin);
+
+        // Close menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#start-menu') && !e.target.closest('#start-button')) {
+                document.getElementById('start-menu').classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

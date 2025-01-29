@@ -1,0 +1,21 @@
+@keyframes fade {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.window-draggable {
+    cursor: move;
+    user-select: none;
+}
+.translucentTB {
+    background-color: rgba(32, 32, 32, 0.6) !important;
+    backdrop-filter: blur(20px) !important;
+}
+.loading-spinner {
+    animation: spin 1s linear infinite;
+}
+.system-overlay {
+    transition: all 0.5s ease;
+}
